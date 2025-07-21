@@ -1,6 +1,9 @@
 # HAL LUH(light Utility helicopter) - Fuel Injection System Digital Twin
 
 This project is an interactive, browser-based digital twin simulating the fuel injection system of a HAL LUH helicopter. It provides a real-time visualization of the system's parameters, flight dynamics, and responses to various fault conditions. The entire simulation runs on the client-side using vanilla JavaScript, HTML, and CSS.
+**PREVIEW**
+<img width="1253" height="839" alt="image" src="https://github.com/user-attachments/assets/a43265e9-0cc1-4873-8630-6906e60d7b35" />
+
 <img width="1055" height="889" alt="image" src="https://github.com/user-attachments/assets/48b258b1-e3d8-4bf8-b947-96a9e4f93346" />
 
 ## Features
