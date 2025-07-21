@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helicopter Fuel Injection System - Digital Twin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+    /* Styles for the new AI Prediction section */
+    .ai-prediction-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .ai-prediction-item {
+        border-left: 3px solid var(--color-primary);
+        padding-left: 12px;
+    }
+    .ai-prediction-item h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: var(--color-text);
+    }
+    .ai-prediction-item p {
+        margin: 0 0 4px 0;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+    }
+    .ai-prediction-item strong {
+        color: var(--color-text);
+        font-weight: 500;
+    }
+    .ai-prediction-nominal {
+        color: var(--color-text-secondary);
+        font-style: italic;
+    }
+    
+    /* Styles for the updated SVG Schematic */
+    .schematic-container .component {
+        cursor: pointer;
+        transition: filter 0.2s ease-in-out;
+    }
+    .schematic-container .component:hover {
+        filter: brightness(1.2);
+    }
+    .schematic-container .component-label {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        fill: #333;
+        text-anchor: middle;
+        pointer-events: none; /* Make text non-clickable */
+    }
+     .schematic-container .line-label {
+        font-family: sans-serif;
+        font-size: 10px;
+        font-weight: bold;
+        fill: #555;
+        text-anchor: middle;
+    }
+    .schematic-container .fault {
+        /* A class to apply a red color to faulty components */
+        fill: #c0392b !important; 
+        stroke: #c0392b !important;
+    }
+    .schematic-container .fuel-globule {
+        fill: #f1c40f; /* Yellow */
+        stroke: #f39c12;
+        stroke-width: 1;
+    }
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>HAL ALH Dhruv - Fuel Injection System Digital Twin</h1>
+            <div class="system-status">
+                <span class="status-indicator" id="systemStatus">SYSTEM NORMAL</span>
+            </div>
+        </header>
+
+        <div class="quadrant-grid">
+            <div class="quadrant quadrant-1">
+                <div class="quadrant-header">
+                    <h2>Input & Output Values</h2>
+                </div>
+                <div class="quadrant-content">
+                    <div class="controls-section">
+                        <div class="form-group">
+                            <label for="collectivePitch" class="form-label">Collective Pitch (%)</label>
+                            <input type="range" id="collectivePitch" class="form-control" min="0" max="100" value="60" step="0.1">
+                            <span id="collectivePitchValue">60.0</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Flight Mode</label>
+                            <select id="flightMode" class="form-control">
+                                <option value="manual">Manual</option>
+                                <option value="auto">Auto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="engine-controls">
+                        <button id="startEngine" class="btn btn--primary">START ENGINE</button>
+                        <button id="stopEngine" class="btn btn--secondary">STOP ENGINE</button>
+                        <button id="emergencyStop" class="btn btn--error">EMERGENCY STOP</button>
+                    </div>
+
+                    <div class="simulation-controls">
+                        <button id="playPause" class="btn btn--outline">PLAY</button>
+                        <button id="reset" class="btn btn--outline">RESET</button>
+                        <button id="downloadLog" class="btn btn--outline">DOWNLOAD LOG</button>
+                    </div>
+
+                    <div class="parameters-display">
+                        <div class="parameter-grid">
+                            <div class="parameter-item">
+                                <label>Altitude (m)</label>
+                                <span id="altitude">0.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Fuel Pressure (bar)</label>
+                                <span id="fuelPressure">30.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Fuel Temperature (°C)</label>
+                                <span id="fuelTemperature">15.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Fuel Flow Rate (L/h)</label>
+                                <span id="fuelFlowRate">0.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Engine RPM (%)</label>
+                                <span id="engineRPM">100.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Injector Duty Cycle (%)</label>
+                                <span id="injectorDutyCycle">0.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Air Density (kg/m³)</label>
+                                <span id="airDensity">1.225</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Ambient Temperature (°C)</label>
+                                <span id="ambientTemperature">15.0</span>
+                            </div>
+                            <div class="parameter-item">
+                                <label>Vertical Velocity (m/s)</label>
+                                <span id="verticalVelocity">0.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quadrant quadrant-2">
+                <div class="quadrant-header">
+                    <h2>Real-time Graphs</h2>
+                </div>
+                <div class="quadrant-content">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="altitudeChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="fuelPressureChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="engineRpmChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="fuelFlowChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="fuelTempChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quadrant quadrant-3">
+                <div class="quadrant-header"><h2>Fuel System Schematic</h2></div>
+                <div class="quadrant-content">
+                    <div class="schematic-container">
+                        <svg id="schematicSvg" width="100%" height="100%" viewBox="0 0 600 400">
+                            
+                            <!-- Hidden path for fuel animation -->
+                            <defs>
+                                <path id="path-main-continuous" d="M85 150 H 380" fill="none" stroke="none"/>
+                                <path id="path-bypass-return" d="M260 70 V 55 H 60 V 125" fill="none" stroke="none"/>
+                            </defs>
+                            
+                            <!-- Paths -->
+                            <!-- Solid main fuel line from tank to injector -->
+                            <path id="path-main-fuel" d="M85 150 H 380" stroke="#333" stroke-width="3.5" fill="none"/>
+                            
+                            <!-- Dashed black coolant line from top of tank to bypass valve -->
+                            <path id="path-coolant" d="M60 125 V 55 H 270" stroke="#333" stroke-width="4" stroke-dasharray="5 5" fill="none"/>
+                            
+                            <!-- Dashed black bypass return line from bottom of valve to main line -->
+                            <path id="path-bypass-line" d="M260 70 V 150 H 200" stroke="#333" stroke-width="4" stroke-dasharray="5 5" fill="none"/>
+                            
+                            <!-- Dashed red temp sensor line from main line downwards -->
+                            <path id="path-temp-sensor" d="M265 150 V 210" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5 5" fill="none"/>
+                            
+                            <!-- Solid FADEC control line to injector -->
+                            <path id="path-fadec-control" d="M340 280 V 170 H 400" stroke="#333" stroke-width="2" fill="none"/>
+                            
+                            <!-- Solid line from engine to atomiser label -->
+                            <path id="path-engine-output" d="M540 150 H 560 V 200" stroke="#333" stroke-width="2" fill="none"/>
+
+                            <!-- Components (no changes here) -->
+                            <g id="component-tank" class="component" data-component-name="Fuel Tank">
+                                <rect x="35" y="125" width="50" height="50" rx="4" fill="#f1c40f"/>
+                                <text x="60" y="188" class="component-label">Tank</text>
+                            </g>
+                            <g id="component-lp-pump" class="component" data-component-name="LP Pump">
+                                <circle cx="120" cy="150" r="15" fill="#3498db"/>
+                                <text x="120" y="178" class="component-label">LP Pump</text>
+                            </g>
+                            <g id="component-lp-filter" class="component" data-component-name="LP Filter">
+                                <path d="M160 135 L 190 150 L 160 165 Z" fill="#3498db"/>
+                                <text x="175" y="180" class="component-label">LP Filter</text>
+                            </g>
+                            <g id="component-hp-pump" class="component" data-component-name="HP Pump">
+                                <circle cx="225" cy="150" r="18" fill="#e67e22"/>
+                                <text x="225" y="181" class="component-label">HP Pump</text>
+                            </g>
+                            <g id="component-hp-filter" class="component" data-component-name="HP Filter">
+                                <path d="M290 135 L 320 150 L 290 165 Z" fill="#e67e22"/>
+                                <text x="305" y="180" class="component-label">HP Filter</text>
+                            </g>
+                            <g id="component-bypass-valve" class="component" data-component-name="Bypass Valve">
+                                <rect x="245" y="40" width="40" height="30" rx="2" fill="#95a5a6"/>
+                                <text x="275" y="33" class="component-label">Bypass Valve</text>
+                            </g>
+                            <g id="component-fadec" class="component" data-component-name="FADEC">
+                                <rect x="310" y="260" width="60" height="40" rx="2" fill="#95a5a6"/>
+                                <text x="340" y="313" class="component-label">FADEC</text>
+                            </g>
+                            <g id="component-engine" class="component" data-component-name="Engine & Injectors">
+                                <rect x="380" y="135" width="20" height="30" rx="2" fill="#bdc3c7"/>
+                                <circle cx="390" cy="146" r="2" fill="#7f8c8d"/><circle cx="390" cy="140" r="2" fill="#7f8c8d"/>
+                                <circle cx="390" cy="154" r="2" fill="#7f8c8d"/><circle cx="390" cy="160" r="2" fill="#7f8c8d"/>
+                                <text x="390" y="110" class="component-label">Injector w/</text>
+                                <text x="390" y="120" class="component-label">Spark Plug</text>
+                            </g>
+                            <g id="component-turbo-engine" class="component" data-component-name="Turbo Shaft Engine">
+                                <rect x="400" y="125" width="140" height="50" rx="4" fill="#3498db"/>
+                                <rect x="500" y="125" width="10" height="50" fill="#2c3e50"/>
+                                <text x="470" y="188" class="component-label">Turbo Shaft Engine</text>
+                            </g>
+                            
+                            <!-- Non-interactive labels and shapes -->
+                            <ellipse cx="150" cy="55" rx="30" ry="10" fill="#1abc9c"/>
+                            <text x="150" y="35" class="line-label">Coolant</text>
+                            <text x="265" y="225" class="line-label">Temp Sensor</text>
+                            <text x="560" y="215" class="line-label">Atomiser</text>
+
+                            <!-- Fuel Flow Animation -->
+                            <g id="fuel-globules-container"></g>
+                            <g id="bypass-globules-container" style="display: none;"></g>
+                        </svg>
+                    </div>
+                    <div class="component-info" id="componentInfo">
+                        <h3>Component Information</h3>
+                        <p>Click on a component to view details.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quadrant quadrant-4">
+                <div class="quadrant-header">
+                    <h2>Warnings & Alerts</h2>
+                </div>
+                <div class="quadrant-content">
+                    <div class="fault-injection">
+                        <h3>Fault Injection (Testing)</h3>
+                        <div class="fault-checkboxes">
+                            <label><input type="checkbox" id="injectClogged"> Inject Clogged Injector</label><br>
+                            <label><input type="checkbox" id="injectOverheat"> Inject Fuel Overheat</label><br>
+                            <label><input type="checkbox" id="injectRpmDrop"> Inject RPM Droop</label><br>
+                            <label><input type="checkbox" id="injectSensorDrift"> Inject Sensor Drift</label>
+
+                            <script>
+    const errors = {
+        injectClogged: "Clogged Injector",
+        injectOverheat: "Fuel Overheat",
+        injectRpmDrop: "RPM Droop",
+        injectSensorDrift: "Sensor Drift"
+    };
+
+    const intervals = {}; // Store interval IDs for each error
+    let femaleVoice; // Variable to hold the selected female voice object
+
+    function setFemaleVoice() {
+        const voices = window.speechSynthesis.getVoices();
+        femaleVoice = voices.find(voice => 
+            voice.lang.includes('en') && 
+            (voice.name.includes('Female') || voice.name.includes('Zira') || voice.name.includes('Samantha'))
+        );
+        if (!femaleVoice) {
+            femaleVoice = voices.find(voice => voice.lang.includes('en'));
+        }
+    }
+
+    window.speechSynthesis.onvoiceschanged = setFemaleVoice;
+    setFemaleVoice();
+
+    function speakError(errorName) {
+        speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(Warning, Warning: ${errorName});
+        if (femaleVoice) {
+            msg.voice = femaleVoice;
+        }
+        msg.volume = 1.0; 
+        msg.rate = 1; 
+        msg.pitch = 1; 
+        window.speechSynthesis.speak(msg);
+    }
+
+    for (const [id, errorName] of Object.entries(errors)) {
+        const checkbox = document.getElementById(id);
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                if (!intervals[id]) {
+                    speakError(errorName); 
+                    intervals[id] = setInterval(() => {
+                        speakError(errorName);
+                    }, 3000); 
+                }
+            } else {
+                if (intervals[id]) {
+                    clearInterval(intervals[id]);
+                    delete intervals[id];
+                    speechSynthesis.cancel();
+                }
+            }
+        });
+    }
+</script>
+                        </div>
+                    </div>
+
+                    <div class="audio-control">
+                        <label>
+                            <input type="checkbox" id="audioAlarm" checked> Audio Alarm
+                        </label>
+                    </div>
+
+                    <div class="warnings-panel">
+                        <h3>Active Warnings</h3>
+                        <div id="warningsList" class="warnings-list">
+                            </div>
+                    </div>
+
+                    <div class="alerts-log">
+                        <h3>Alert Log</h3>
+                        <div id="alertsLog" class="alerts-log-content">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quadrant quadrant-5">
+                <div class="quadrant-header">
+                    <h2>Fuel System 3D</h2>
+                </div>
+                <div class="quadrant-content">
+                    <div class="schematic3D-container" style="width: 100%; height: 300px; position: relative; background-color: white;">
+</div>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/loaders/GLTFLoader.js';
+
+    // ======== 1. Scene Setup ========
+    const container = document.querySelector('.schematic3D-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 2, 18); // Position camera to view the schematic
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // ======== 2. Lighting ========
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
+
+    // ======== 3. Controls ========
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 0, 0); // Focus controls on the center of the schematic
+
+    // ======== 4. Load Helicopter Model (Background) ========
+    const loader = new GLTFLoader();
+    loader.load('UH_72_Lakota.gltf', function (gltf) {
+        const model = gltf.scene;
+        // Make model transparent to serve as a backdrop
+        model.traverse((node) => {
+            if (node.isMesh && node.material) {
+                node.material.transparent = true;
+                node.material.opacity = 0.15;
+                node.material.depthWrite = false; // Prevents transparent parts from hiding schematic
+            }
+        });
+        //model.rotation.y = Math.PI / 2;
+        //model.rotation.x = Math.PI / 2;
+        model.position.set(+10, 0, -17); // Position behind the schematic
+        model.scale.set(0.08, 0.08, 0.08);
+        scene.add(model);
+    }, undefined, function (error) {
+        console.error('Could not load helicopter model:', error);
+    });
+
+    // ======== 5. Materials and Geometries ========
+    const materials = {
+        tank: new THREE.MeshStandardMaterial({ color: 0xffeb3b }),      // Yellow
+        lp: new THREE.MeshStandardMaterial({ color: 0x03a9f4 }),        // Blue
+        hp: new THREE.MeshStandardMaterial({ color: 0xff5722 }),        // Orange
+        valve: new THREE.MeshStandardMaterial({ color: 0x212121 }),     // Black
+        engine: new THREE.MeshStandardMaterial({ color: 0x89cff0 }),    // Light Blue
+        injector: new THREE.MeshStandardMaterial({ color: 0x9e9e9e }),  // Gray
+        sensor: new THREE.MeshStandardMaterial({ color: 0xf44336 }),    // Red
+        mainLine: new THREE.LineBasicMaterial({ color: 0x424242, linewidth: 2 }),
+        bypassLine: new THREE.LineDashedMaterial({ color: 0x212121, dashSize: 0.3, gapSize: 0.2 }),
+        controlLine: new THREE.LineDashedMaterial({ color: 0xf44336, dashSize: 0.3, gapSize: 0.2 }),
+    };
+
+    const geometries = {
+        pump: new THREE.CylinderGeometry(0.4, 0.4, 1, 32),
+        filter: new THREE.ConeGeometry(0.4, 1, 32),
+        box: new THREE.BoxGeometry(1.5, 1.5, 1.5),
+        injector: new THREE.CylinderGeometry(0.1, 0.1, 0.8, 16),
+        sensor: new THREE.SphereGeometry(0.15, 16, 16)
+    };
+
+    // ======== 6. Create and Position Schematic Components ========
+    // Main Flow Components
+    const tank = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 3), materials.tank);
+    tank.position.set(-11, 0, 0);
+    scene.add(tank);
+
+    const lpPump = new THREE.Mesh(geometries.pump, materials.lp);
+    lpPump.position.set(-7.5, 0, 0);
+    lpPump.rotation.z = -Math.PI / 2;
+    scene.add(lpPump);
+
+    const lpFilter = new THREE.Mesh(geometries.filter, materials.lp);
+    lpFilter.position.set(-5, 0, 0);
+    lpFilter.rotation.z = -Math.PI / 2;
+    scene.add(lpFilter);
+
+    const hpPump = new THREE.Mesh(geometries.pump, materials.hp);
+    hpPump.position.set(-2, 0, 0);
+    hpPump.rotation.z = -Math.PI / 2;
+    scene.add(hpPump);
+    
+    const tempSensor = new THREE.Mesh(geometries.sensor, materials.sensor);
+    tempSensor.position.set(-0.5, 0, 0);
+    scene.add(tempSensor);
+
+    const hpFilter = new THREE.Mesh(geometries.filter, materials.hp);
+    hpFilter.position.set(1, 0, 0);
+    hpFilter.rotation.z = -Math.PI / 2;
+    scene.add(hpFilter);
+
+    // Engine and Injectors
+    const engine = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 6, 32), materials.engine);
+    engine.position.set(7, 0, 0);
+    engine.rotation.z = -Math.PI / 2;
+    scene.add(engine);
+
+    for (let i = 0; i < 4; i++) {
+        const injector = new THREE.Mesh(geometries.injector, materials.injector);
+        injector.position.set(4.5, (i - 1.5) * 0.7, 0);
+        scene.add(injector);
+    }
+
+    // Control and Bypass Components
+    const fadec = new THREE.Mesh(geometries.box, materials.valve);
+    fadec.position.set(3, -4, 0);
+    scene.add(fadec);
+
+    const bypassValve = new THREE.Mesh(geometries.box, materials.valve);
+    bypassValve.position.set(3, 4, 0);
+    scene.add(bypassValve);
+
+    // ======== 7. Connect Components with Lines ========
+    function createLine(points, material) {
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geometry, material);
+        // Required for dashed lines
+        line.computeLineDistances();
+        scene.add(line);
+    }
+    
+    // Main Fuel Line (Solid)
+    const mainFuelPath = [
+        new THREE.Vector3(-9.5, 0, 0), new THREE.Vector3(-7, 0, 0),
+        new THREE.Vector3(-7, 0, 0), new THREE.Vector3(-5.5, 0, 0),
+        new THREE.Vector3(-4.5, 0, 0), new THREE.Vector3(-2.5, 0, 0),
+        new THREE.Vector3(-1.5, 0, 0), new THREE.Vector3(0.5, 0, 0),
+        new THREE.Vector3(1.5, 0, 0), new THREE.Vector3(4, 0, 0)
+    ];
+    createLine(mainFuelPath, materials.mainLine);
+    
+    // Injector Manifold Lines (Solid)
+    const injectorManifoldPath = [
+        new THREE.Vector3(4, 1.05, 0), new THREE.Vector3(4, -1.05, 0)
+    ];
+    createLine(injectorManifoldPath, materials.mainLine);
+    for (let i = 0; i < 4; i++) {
+        createLine([new THREE.Vector3(4, (i-1.5)*0.7, 0), new THREE.Vector3(4.5, (i-1.5)*0.7, 0)], materials.mainLine);
+    }
+
+    // Bypass Line (Dashed)
+    const bypassPath = [
+        new THREE.Vector3(3, 0, 0), new THREE.Vector3(3, 3.25, 0),
+        new THREE.Vector3(3.75, 4, 0), new THREE.Vector3(-9.5, 4, 0),
+        new THREE.Vector3(-9.5, 2, 0)
+    ];
+    createLine(bypassPath, materials.bypassLine);
+
+    // Temp Sensor to FADEC Line (Dashed, Red)
+    const tempSensorPath = [
+        new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(-0.5, -4, 0),
+        new THREE.Vector3(2.25, -4, 0)
+    ];
+    createLine(tempSensorPath, materials.controlLine);
+
+    // FADEC to Engine Line (Solid)
+    const fadecControlPath = [
+        new THREE.Vector3(3.75, -4, 0), new THREE.Vector3(7, -3.25, 0),
+        new THREE.Vector3(7, -1.5, 0)
+    ];
+    createLine(fadecControlPath, materials.mainLine);
+
+
+    // ======== 8. Animation Loop ========
+    function animate() {
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    renderer.setAnimationLoop(animate);
+
+    // ======== 9. Handle Window Resizing ========
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+</script>
+
+            <div class="quadrant quadrant-6">
+                <div class="quadrant-header">
+                    <h2>Fault Detection And Mitigation</h2>
+                </div>
+                <div class="quadrant-content">
+                    <div id="aiPredictionContent" class="ai-prediction-content">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const componentInfoPanel = document.getElementById('componentInfo');
+            const components = document.querySelectorAll('#schematicSvg .component');
+            const componentDetails = {
+                'Fuel Tank': { title: 'Fuel Tank', description: 'Stores the primary fuel supply (ATF K-50).', status: 'Nominal' },
+                'LP Pump': { title: 'Low-Pressure (LP) Pump', description: 'Draws fuel from the tank and provides initial pressure.', status: 'Nominal' },
+                'LP Filter': { title: 'Low-Pressure (LP) Filter', description: 'First stage filtration. Removes larger contaminants.', status: 'Nominal' },
+                'HP Pump': { title: 'High-Pressure (HP) Pump', description: 'Gear-type pump. Pressurizes fuel for the engine.', status: 'Nominal' },
+                'HP Filter': { title: 'High-Pressure (HP) Filter', description: 'Second stage filtration. Protects engine components.', status: 'Nominal' },
+                'Bypass Valve': { title: 'Bypass Valve', description: 'Regulates fuel flow and pressure, controlled by FADEC.', status: 'Nominal' },
+                'FADEC': { title: 'FADEC', description: 'Full Authority Digital Engine Control computer.', status: 'Active' },
+                'Engine & Injectors': { title: 'Engine & Injectors', description: 'Integrated unit housing injectors for fuel atomization during engine start.', status: 'Idle' },
+                'Turbo Shaft Engine': { title: 'Turbo Shaft Engine', description: 'The core power plant. Receives atomized fuel for combustion.', status: 'Idle' },
+            };
+
+            components.forEach(component => {
+                component.addEventListener('click', () => {
+                    const componentName = component.dataset.componentName;
+                    const details = componentDetails[componentName];
+                    if (details) {
+                        componentInfoPanel.innerHTML = `
+                            <h3>${details.title}</h3>
+                            <p>${details.description}</p>
+                            <p><strong>Status:</strong> ${details.status}</p>
+                        `;
+                    }
+                });
+            });
+
+            const faultMappings = {
+                injectClogged: ['component-engine'],
+                injectOverheat: ['component-hp-pump', 'path-temp-sensor'],
+                injectRpmDrop: ['component-turbo-engine'],
+                injectSensorDrift: ['component-fadec']
+            };
+
+            Object.keys(faultMappings).forEach(checkboxId => {
+                const checkbox = document.getElementById(checkboxId);
+                if(checkbox) {
+                    checkbox.addEventListener('change', (event) => {
+                        const componentIds = faultMappings[checkboxId];
+                        componentIds.forEach(id => {
+                            const element = document.getElementById(id);
+                            if (element) {
+                                element.classList.toggle('fault', event.target.checked);
+                            }
+                        });
+                    });
+                }
+            });
+
+            const globulesContainer = document.getElementById('fuel-globules-container');
+            const fuelFlowRateEl = document.getElementById('fuelFlowRate');
+            const numGlobules = 20; // More globules for a denser stream
+
+            // Create a single, continuous path for the main fuel line for easier animation
+            const mainFuelPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            mainFuelPath.setAttribute('id', 'path-main-continuous');
+            mainFuelPath.setAttribute('d', 'M60 110 H 380'); // Combines path-main-fuel and path-to-engine
+            mainFuelPath.style.display = 'none'; // This path is for motion only, not for display
+            globulesContainer.appendChild(mainFuelPath);
+
+
+            function createGlobules() {
+                for (let i = 0; i < numGlobules; i++) {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('r', '3');
+                    circle.setAttribute('class', 'fuel-globule');
+                    
+                    const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+                    animate.setAttribute('repeatCount', 'indefinite');
+                    animate.setAttribute('begin', ${i * 0.15}s); // Tighter stagger for a smoother stream
+                    
+                    const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+                    mpath.setAttribute('href', '#path-main-continuous');
+                    
+                    animate.appendChild(mpath);
+                    circle.appendChild(animate);
+                    globulesContainer.appendChild(circle);
+                }
+            }
+
+            function updateFuelAnimation() {
+                const flowRate = parseFloat(fuelFlowRateEl.textContent);
+                const animators = globulesContainer.querySelectorAll('animateMotion');
+
+                if (isNaN(flowRate) || flowRate <= 0.1) {
+                    globulesContainer.style.display = 'none';
+                    return;
+                }
+                
+                globulesContainer.style.display = 'block';
+
+                // Higher flow rate -> shorter duration -> FASTER speed.
+                // The scaling factor 600 provides a good dynamic range for the animation speed.
+                const duration = Math.max(0.5, 600 / flowRate); 
+
+                animators.forEach(anim => {
+                    anim.setAttribute('dur', ${duration}s);
+                });
+            }
+
+            createGlobules();
+            
+            const observer = new MutationObserver(updateFuelAnimation);
+            observer.observe(fuelFlowRateEl, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            
+            updateFuelAnimation();
+        });
+    </script>
+</body>
+</html>
