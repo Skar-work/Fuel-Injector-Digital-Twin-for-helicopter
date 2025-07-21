@@ -17,7 +17,7 @@ This project is an interactive, browser-based digital twin simulating the fuel i
 * **Advanced Fault Injection System:**
     * Manually inject faults like **Clogged Injectors**, **Fuel Overheat**, **RPM Droop**, and **Sensor Drift** to study system resilience and behavior under stress.
 * **Audible & Visual Warning System:** The simulation includes a master warning system with audible voice alerts ("Warning, Warning...") and visual indicators for active faults.
-* **AI-Powered Predictive Analysis (Hardcoded):** When a fault is injected, a dedicated panel provides a detailed analysis, including:
+* **AI-Powered Predictive Analysis :** When a fault is injected, a dedicated panel provides a detailed analysis, including:
     * Faults Detected
     * Fault Location / Systems Affected
     * Immediate Corrective Measures
@@ -39,6 +39,8 @@ The project is entirely client-side and requires no backend or build steps.
 ├── index.html      # The main HTML file for the dashboard UI
 ├── style.css       # All styling for the application
 └── app.js          # Core JavaScript file containing the entire simulation logic
+/
+└── mlbackend(not required for running the project, it was used to simulate the noise factor to mimic real world scenario)
 
 
 ## How to Run
@@ -46,8 +48,8 @@ The project is entirely client-side and requires no backend or build steps.
 This project is designed to run directly in any modern web browser.
 
 1.  Clone or download the repository to your local machine.
-2.  Navigate to the project folder.
-3.  Double-click the `index.html` file.
+2.  Navigate to the project folder in any IDE.
+3.  Open the `index.html` file and run using Live-Server(VS code extension).
 
 The digital twin dashboard will open and be fully functional.
 
