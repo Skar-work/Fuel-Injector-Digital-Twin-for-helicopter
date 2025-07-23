@@ -67,17 +67,10 @@ The digital twin dashboard will open and be fully functional.
 The design ideas are present under /hardware/IO board/Design Notes/ 
 
 1. **Schematic**
-<img width="3507" height="2480" alt="image" src="https://github.com/user-attachments/assets/c72d61d6-5cc0-4ffd-b46f-214fea272c45" />
 
 2. **Configuration for STM32F042F6Px**
 <img width="612" height="518" alt="image" src="https://github.com/user-attachments/assets/a58e1b6b-a8ad-4cc4-952a-cb134e167fe1" />
 
 3. **PCB Design of board**
-![Uploading image.png…]()
-
 
 4. **3D Model of board**
-![Uploading image.png…]()
-
-
-
