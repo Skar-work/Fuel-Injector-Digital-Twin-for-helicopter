@@ -1,14 +1,16 @@
 # HAL LUH(light Utility helicopter) - Fuel Injection System Digital Twin
 
 This project is an interactive, browser-based digital twin simulating the fuel injection system of a HAL LUH helicopter. It provides a real-time visualization of the system's parameters, flight dynamics, and responses to various fault conditions. The entire simulation runs on the client-side using vanilla JavaScript, HTML, and CSS.
+
 **PREVIEW**
+
 <img width="1253" height="839" alt="image" src="https://github.com/user-attachments/assets/a43265e9-0cc1-4873-8630-6906e60d7b35" />
 
 <img width="1055" height="889" alt="image" src="https://github.com/user-attachments/assets/48b258b1-e3d8-4bf8-b947-96a9e4f93346" />
 
 ## Features
 
-* **Real-time Physics Simulation:** The core of the digital twin is a JavaScript-based simulation that models flight dynamics, engine parameters, and fuel system behavior at a rate of 10 Hz.
+* **Real-time Physics Simulation:** The core of the digital twin is a JavaScript-based simulation that models flight dynamics4. 3D Model of board, engine parameters, and fuel system behavior at a rate of 10 Hz.
 * **Interactive Controls:** Users can directly control the helicopter's flight by adjusting the **Collective Pitch** and observe the immediate effects on all system parameters.
 * **Comprehensive Data Visualization:**
     * **Live Graphs:** Five real-time charts dynamically display key metrics such as Altitude, Fuel Pressure, Engine RPM, Fuel Flow Rate, and Fuel Temperature.
@@ -66,18 +68,20 @@ The digital twin dashboard will open and be fully functional.
 ## Hardware design (IO board)
 The design ideas are present under /hardware/IO board/Design Notes/ 
 
-1. **Schematic**
+**1. Schematic**
 
 <img width="1140" height="787" alt="image" src="https://github.com/user-attachments/assets/19127b0c-0a78-4dbb-973b-1bc1c3e37558" />
 
-2. **Configuration for STM32F042F6Px**
+**2. Configuration for STM32F042F6Px**
 
-                              <img width="612" height="518" alt="image" src="https://github.com/user-attachments/assets/a58e1b6b-a8ad-4cc4-952a-cb134e167fe1" />
+<img width="612" height="518" alt="image" src="https://github.com/user-attachments/assets/a58e1b6b-a8ad-4cc4-952a-cb134e167fe1" />
 
-3. **PCB Design of board**
+**3. PCB Design of board**
 
 <img width="1144" height="801" alt="image" src="https://github.com/user-attachments/assets/e028606b-71c5-4c51-b822-5cba4ffed7f3" />
 
-4. **3D Model of board**
+
+
+**4. 3D Model of board**
 
 <img width="1144" height="801" alt="image" src="https://github.com/user-attachments/assets/898dc6e6-8efe-4139-adf3-ad4fbd2e62c6" />
